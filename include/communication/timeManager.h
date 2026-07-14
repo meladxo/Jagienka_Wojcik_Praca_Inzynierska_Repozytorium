@@ -13,5 +13,4 @@
     String timeManager_bytesToISO(const dateTime_bytes &buff);
     void rtcPinsSleep();
 
-
 #endif

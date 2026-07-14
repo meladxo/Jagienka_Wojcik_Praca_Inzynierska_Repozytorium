@@ -1,3 +1,8 @@
+/*
+  Plik główny programu, zarządzający kolejnością wykonywania zadań,
+  inicjalizacja struktur, zmiennych sterujących i 
+  sterowanie akcjami konfiguracyjnymi.
+*/ 
 #include <Arduino.h>
 #include "debug.h"
 #include "lilygoDefines.h"
@@ -38,11 +43,10 @@ const uint8_t DISTANCE_SAMPLE_COUNT = 16;               // liczba próbek z któ
 float distance_samples[DISTANCE_SAMPLE_COUNT] = {0};    // tablica próbek zebranych przez czujnik odległości
 const uint8_t meanLimit = 8;                            // dla zebrania mniej ponizej 8 probek, wyznaczana jest alternatywnie mediana 
 
-
 // Organizacja struktur i zmiennych dla rejestracji błędów i statusu pracy
 RTC_NOINIT_ATTR uint32_t rtcNoInitMagic = 0;                              // Kontrolna zmienna magic value - dla wykrycia korupcji pamieci RTC
 RTC_NOINIT_ATTR uint32_t dailySendFailsCount = 0;                         // Licznik totalnego błędu wysyłki danych  - stan kumulacyjny
-RTC_NOINIT_ATTR RTC_TestStatus RTC_StatusBufor = {0,0,0,0,0,0,0};         // Licznik błędów pracy modemu - stan aktualny
+RTC_NOINIT_ATTR RTC_TestStatus RTC_StatusBufor = {0,0,0,0,0,0};         // Licznik błędów pracy modemu - stan aktualny
 RTC_NOINIT_ATTR RTC_problemWakeUpCodes RTC_wakeUpCodes = {0,0,0,0,0,0};   // Licznik błędów resetu - stan kumulacyjny
 
 
@@ -53,7 +57,6 @@ void setup(){
   }
   /********* ZADANIA INICJALIZACYJNE ******************************************************************************************************************************/ 
   if(init_flg){
-    
     modemForceOffPins();  // zabezpieczające odciecie zasilania modemu 
     if(rtcSetUp_flg){
       timeManager_setUp_DS3231();    
@@ -75,7 +78,7 @@ void setup(){
       if(wakeUpCode == 1){
         RTC_wakeUpCodes.code_1_count++;
       }else if(wakeUpCode == 9){
-        RTC_wakeUpCodes.code_9_count++;
+        RTC_wakeUpCodes.code_9_count++; 
       }else if(wakeUpCode == 5){
         RTC_wakeUpCodes.code_5_count++;
       }else if(wakeUpCode == 7){

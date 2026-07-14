@@ -20,6 +20,4 @@ void FLASH_readBackupWakeUpCodes(RTC_problemWakeUpCodes* RTC_wakeUpCodes);
 void FLASH_saveDailySendFailCount(uint32_t dailySendFailsCount);
 void FLASH_readDailySendFailCount(uint32_t* dailySendFailsCount);
 
-// void FLASH_saveStatusBufor(const RTC_TestStatus* status);
-
 #endif
