@@ -1,0 +1,9 @@
+# Opis
+Repozytorium zawiera ...
+co robi program ...
+
+## Bilbioteki, licencje, źródła
+w pliku ...
+
+## Kod źródlowy
+struktura lib, src , co w platformio.ini
