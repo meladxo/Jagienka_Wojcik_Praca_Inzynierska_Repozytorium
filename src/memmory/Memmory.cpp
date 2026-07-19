@@ -1,4 +1,13 @@
-#include <Preferences.h> // NVS built-in wear leveling
+/*
+    Plik wykorzystuje bibliotekę Preferences (NVS, wear leveling)
+    do trwałego backupu danych w przypadkach nietrwałości pamięci RTC.
+
+    Funkcja FLASH_init - obsługuje inicjalizację przestrzeni, wyzerowanie danych i ustawienie wartości startowych.
+    Zbiór funkcji FLASH_set_ - odpowiadają za ustawianie flag oraz przygotowanie stanu backupu
+    Zbiór Funkcji FLASH_save_ - odpowiadają za trwały zapis liczników, kodów wybudzeń i struktur pomiarowych
+    Zbiór funkcji FLASH_read_ - odpowiadają za odczyt flag, liczników i struktur pomiarowych z pamięci backupowej
+*/
+#include <Preferences.h> // Biblioteka z zaspisami NVS built-in wear leveling
 #include "memmory/rtcStruct.h"
 #include "memmory/Memmory.h"
 #include "debug.h"
@@ -43,7 +52,7 @@ void FLASH_clearFlgBckp(){
     prefs.begin("backup_space", false);
     prefs.putBool("backup_flg", false);
     prefs.end();  
-    if(isDebug){ Serial.println("FLASH: CLEAR Wysylka udana (BackupFlg = false) i przygotowanie dla nastepnego dnia"); }
+    if(isDebug){ Serial.println("FLASH: CLEAR (BackupFlg = false) i przygotowanie dla nastepnego dnia"); }
 }
 
  

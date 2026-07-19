@@ -2,14 +2,14 @@
     Obłsuga modemu SIMCOM A7670 :
     - sekwencji uruchomienia i wyłączenia modemu
     - nawiązania połączenia z modemem i rejestracji do sieci LTE
-    - odczytu współrzędnych geograficznych z wykorzystaniem Assisted GPS
     - przesyłu danych przez HTTPS POST do serveru ThingSpeak 
-    Zastosowano optymalizacje usypiania esp32, elimincaje nieskończonych pętl i doboru wartości TIMEOUT dla pracy rejestratora w trudnych warunkach terenowych
+    - odczytu współrzędnych geograficznych z wykorzystaniem Assisted GPS
+    Zastosowano optymalizacje usypiania esp32, elimincaje nieskończonych pętli 
+    i dobrane doświadczalne wartości TIMEOUT.
 
     Kod został zaadaptowany na bazie przykładów producenta płytki Lilygo : 
-    - modemPowerOn_noReset
     - modemPowerOff
-    - modemReset - nieuzywana
+    - modemReset 
     - DeepSleep
     - GPS_Acceleration
     - HttpsBuildPost
@@ -55,7 +55,7 @@ static const bool MODEM_SUCCESS = true;
     Funkcja zwraca status sukcesu/błędu włączania.
     
     *delay() - wymagany przy sekwencjach kontroli modemu oraz kliczowych stabilizacji
-    lightSleepDelay() - w pozostałych miejscach
+     lightSleepDelay() - w pozostałych miejscach
 */
 bool modemPowerOn(){
 
@@ -148,6 +148,7 @@ bool modemPowerOn(){
 
 /*
     Obsługa wyłączenia uruchomionego modemu, z zabezpieczeniem przed resetami modemu.
+    Z uwagi na zawodne wyłączanie modemu funkcjami TinyGsmClient wprowadzono stałe wymuszenie stanu pinów w stan wyłączonego zasilania.
     Funkcja zwraca status sukcesu/błędu wyłączania.
 */
 bool modemPowerOff(){
@@ -233,7 +234,7 @@ bool modemReset(){
     pinMode(MODEM_DTR_PIN, OUTPUT);      
     digitalWrite(MODEM_DTR_PIN, LOW);
 
-    SerialAT.begin(MODEM_BAUDRATE, SERIAL_8N1, MODEM_RX_PIN, MODEM_TX_PIN);
+    SerialAT.begin(MODEM_BAUDRATE, SERIAL_8N1, MODEM_RX_PIN, MODEM_TX_PIN); // komunikacja UART
 
     // Reset modemu (sekwencja resetu)
     pinMode(MODEM_RESET_PIN, OUTPUT);
@@ -242,7 +243,6 @@ bool modemReset(){
     digitalWrite(MODEM_RESET_PIN, MODEM_RESET_LEVEL);
     delay(3000);
     digitalWrite(MODEM_RESET_PIN, !MODEM_RESET_LEVEL);
-
 
     lightSleepDelay(6000); // Delay przed rozpoczeciem testu AT
    
@@ -286,11 +286,12 @@ bool modemReset(){
     Weryfikacja uwzględnia optymalizację pod kątem : 
         - eliminacji pętli nieskończonych
         - usypiania płytki esp32 w trybie ligtht sleep
+        - wprowadzono przerwy lightsleep dalay miedzy nastepnymi zadaniami połaczenia z intrastrukutrą operatora 
     Weryfikacja :
-        - DEBUG - weryfikacja karty SIM (timeout 1s)
+        - DEBUG - weryfikacja karty SIM 
         - ustawienie APN
-        - weryfikacja rejestracji z siecią komórkową (timout MODEM_REG_TIMEOUT_MS 2min)
-        - weryfikacja aktywacji połączenia sieciowego z APN (timout xs)
+        - weryfikacja rejestracji z siecią komórkową  
+        - weryfikacja aktywacji połączenia sieciowego z APN  
         - weryfikacja adresu IP
     Funkcja zwraca status sukcesu/błędu wyłączania.
 */
@@ -365,11 +366,11 @@ bool modemTestConnection(){
 
     // Aktywacja sieci z APN 
     const uint8_t MAX_NETWORK_RETRIES = 90; // negocjacja APN ~180s
-    for(uint8_t attempt = 1; attempt <= MAX_NETWORK_RETRIES; attempt++) {        
+    for(uint8_t retry = 1; retry <= MAX_NETWORK_RETRIES; retry++) {        
         if(modem.setNetworkActive(apn, use_ipv6_access_point)) {
             break; 
         }
-        if(attempt < MAX_NETWORK_RETRIES) {
+        if(retry < MAX_NETWORK_RETRIES) {
             lightSleepDelay(2000);   
             if(isDebug){ Serial.println("APN retry, uśpienie 2s"); }
         } else {
@@ -389,7 +390,6 @@ bool modemTestConnection(){
         return MODEM_ERROR;
     }
     lightSleepDelay(POST_IP_WAIT_MS); // stabilizacja
- 
 
     if(isDebug){ Serial.println("Połączenie sieciowe gotowe!"); }
     return MODEM_SUCCESS;  
@@ -567,7 +567,6 @@ bool modem_PostHttpsThingSpeak(const String &jsonBody, String ThingSpeakChanelID
             Serial.print("HTTP Header : ");
             Serial.println(header);
         }
-
         // HTTPS response
         String body = modem.https_body();
         if (isDebug && body.length() > 0) {
@@ -586,10 +585,11 @@ bool modem_PostHttpsThingSpeak(const String &jsonBody, String ThingSpeakChanelID
 }
 
 
-
 /*
     Specjalne wymuszenie wyłaczenia modemu przez piny sterujące.
-    Funkcje : włączeny stan modemu po wgraniu programu, włączony modem przy resecie
+    Uźycie : 
+        - włączeny stan modemu po wgraniu programu, 
+        - zabezpieczenie podczas nieplanowanych resetów ESP32 włączony modem przy resecie
 */
 void modemForceOffPins(){
     // Zwolnienie pinow w stan domyslny 
@@ -614,6 +614,3 @@ void modemForceOffPins(){
     digitalWrite(MODEM_DTR_PIN, LOW);
     if(isDebug){Serial.println("Wymuszone odciecie zasilania modemu");}
 }
- 
-
-

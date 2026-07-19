@@ -1,7 +1,7 @@
 /*
   Plik główny programu, zarządzający kolejnością wykonywania zadań,
-  inicjalizacja struktur, zmiennych sterujących i 
-  sterowanie akcjami konfiguracyjnymi.
+  inicjalizacja struktur, zmiennych sterujących.
+  Pozwala na sterowanie akcjami konfiguracyjnymi.
 */ 
 #include <Arduino.h>
 #include "debug.h"
@@ -29,7 +29,7 @@ const bool flashSetUp_flg = false;   // flaga ustawiana ręcznie przy konfigurac
 RTC_NOINIT_ATTR uint16_t wakeUpCounter = 0;   // Licznik dziennych wybudzen
 RTC_NOINIT_ATTR uint16_t daysCounter = 1;     // Licznik dni tygodnia w pamieci 
 const uint16_t FullCycleWakeups = 24;         //  Liczba cyklów pomiarowych i numer ostatniego cyklu wysyłki danych 
-const uint32_t timeToSleepSec = 36000;         // 3600 sekundy czasu uśpienia płytki między cyklami co godzin 
+const uint32_t timeToSleepSec = 3;         // 3600 sekundy czasu uśpienia płytki między cyklami co godzin 
 const bool sendGps_flg = true;
 const uint16_t sendGpsDay = 7;                // 7 Dzien tygodnia pomiaru gps
 void hourlyTaskList(uint16_t index);          // Funkcja pomocnicza organizująca zadania wykonywane co-godzinę
@@ -57,7 +57,6 @@ void setup(){
   }
   /********* ZADANIA INICJALIZACYJNE ******************************************************************************************************************************/ 
   if(init_flg){
-    modemForceOffPins();  // zabezpieczające odciecie zasilania modemu 
     if(rtcSetUp_flg){
       timeManager_setUp_DS3231();    
     }
@@ -284,8 +283,6 @@ void loop(){}
 
 
 /*************************************************************************************************************************************************************/
-
-
 void hourlyTaskList(uint16_t index){
   // Odczyt aktualnego czasu modułu zegarowego RTC             
   timeManager_read_DS3231(&RTC_buforCyclical[index].created_at_bytes);

@@ -20,7 +20,6 @@ const uint8_t TEMP_SENSOR_RESOLUTION = 12;
 const int CONVERSION_TIME_MS = 750;      
 const float ERROR_TEMP_C = -127.0f;
 
-
 //weryfikacja czasu konwersji
 static unsigned long lastTempRequest = 0;
 static unsigned long debug_conversionStart = 0;
@@ -44,7 +43,6 @@ void requestTemp(){
 
 /*
   Funkcja dla odczytu temperatury nieblokującego procesora przy oczekiwaniu na konwersje temperatury przez czujnik.
-  Zwraca true dla zakończonego pomiaru.
 */
 bool isTempReady(){ 
     if(millis() - lastTempRequest >= CONVERSION_TIME_MS){
@@ -66,8 +64,6 @@ float readTemp(){
 unsigned long debug_getConversionTime(){ 
     return debug_conversionStart;
 }   
-
-
 
 
 /* 

@@ -1,8 +1,9 @@
 /*
-  Obłsuga odczytu odległości mierzonej czujnikiem ultradźwiękowym A02YYUW
+  Obłsuga odczytu odległości mierzonej czujnikiem ultradźwiękowym A02YYUW, zadania:
   - obłsuga komunikacji UART i odczytu danych z czujnika
   - inicjalizacja i konfiguacja czujnika
   - algorytm kompensacji temperaturowej wartości mierzonych czujnikiem ultradźwiękowym
+  - przygotowania czujnika do odcięcia zasilania
 
   Kod został zaadaptowany na bazie przykładu producenta czujnika DFRobot udostępnionym bez określonej licencji
   https://wiki.dfrobot.com/sen0311/docs/21651
@@ -16,8 +17,7 @@
 const uint16_t DISTNACE_MIN_RANGE_CM = 3; 
 const uint16_t DISTNACE_MAX_RANGE_CM = 450; 
 const float DISTANCE_ERROR = -1.0f;     
-const float DISTANCE_RISK_TEMP_C = -15.0f;
-
+const float DISTANCE_RISK_TEMP_C = -15.0f;  // temperatura graniczna pracy czujnika, po nizej ktore nie sa wykonywane pomiary
 
 static const uint16_t DISTANCE_READ_TIMEOUT_MS = 300;  // timeout 100ms/300ms dla wybranego trybu DISTANCE_SENSOR_RX_PIN
                                                        // TX Lilygo - RX czujnika (LOW=realtime 100ms, HIGH/float=stable 300ms)
@@ -128,8 +128,6 @@ float distanceSensor_tempCompensation(float tempC, float distanceCm){
     return (distanceCm * (331.6f+(0.6f*tempC)) / INTERNAL_SOUND_SPEED);
   }
 }
-
-
 
 
 

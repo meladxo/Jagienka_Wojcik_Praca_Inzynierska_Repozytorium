@@ -1,9 +1,5 @@
 /*
-    zarzadzanie akcjami pomiarowycmi w projeckei
-    - pomiar temp
-    - warunkowy pomiar dist
-    - kompensacja dist
-    - filtracja danych pomiarowyc 
+    Zarzadzanie łącznie akcjami pomiarowymi odległości w projekcie.
 */
 #include <Arduino.h>
 #include "sensors/measurementManager.h"
@@ -13,9 +9,15 @@
 #include "debug.h"
 
 /*
+	Funkcja sensorMeasurements realizuje pełny cykl pomiarowy: odczyt temperatury, warunkowy pomiar serii odległości (niewykonywany przy temp. ponizej -15C),
+	filtrację wyniku metodą średniej ucinanej oraz kompensację temperaturową końcowego wyniku.
+	Parametry :
+		temperature - wskaźnik na zmienną temperatury otoczenia odczytaną z czujnika
+		distanceRaw - wskaźnik na zmienną surowego wyniku pomiaru odległości
 		distanceCompensated wskaźnik na zmienną skompensowanej odległości cm lub DISTANCE_ERROR
 		distance_samples - tablica buforująca próbki 
 		sampleCount  - liczba próbek do zebrania (DISTANCE_SAMPLE_COUNT)
+		meanLimit - liczba wartości skrajnych odrzucanych przy obliczaniu średniej ucinanej
 */
 void sensorMeasurements(float *temperature, float *distanceRaw, float *distanceCompensated, float *distance_samples, uint8_t sampleCount , uint8_t meanLimit){
 	bool tempConverstionStart = false;

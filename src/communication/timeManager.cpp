@@ -1,18 +1,3 @@
-//  TODO OPIS funkcji
-
-/*
-  For full disclousure see file : 3RD_PARTY_LICENCES.txt
-  This file sources :
-  - NTPClient - under MIT License Copyright © taranais (https://github.com/taranais)
-  - NorthernWidget/DS3231  - under Unlicense license
-  - JChristensen/Timezone  - under GNU General Public License v3.0
-
-do opisania : 
-WiFi
-WiFiUdp
-Wire
-*/
-
 /*
   Obsługa modułu zegara czasu rzeczywsitego RTC DSDS3231 :
   - odczyt czasu konfiguracyjnego za pomocą WiFi NTP Client
@@ -21,6 +6,7 @@ Wire
   - zapis czasu konfiguracyjnego do DSDS3231 jako czas uniwersalny UCT+0
   - odczyt czasu DSDS3231 
       bazuje na blibliotece DSDS3231 https://github.com/NorthernWidget/DS3231.git 
+      obsługującej rejestry DS3231 w formacie BCD
   - obsługa zmiany czasu z zimowego na letni i konwersji na timestamp ISO 
       bazuje na bibliotece https://github.com/JChristensen/Timezone autorstwa https://github.com/JChristensen
 */
@@ -59,9 +45,14 @@ TimeChangeRule plDST = {"CEST", Last, Sun, Mar, 2, 120}; // Czas letni: UTC+2
 TimeChangeRule plSTD = {"CET", Last, Sun, Oct, 3, 60};   // Czas zimowy: UTC+1
 Timezone polska(plDST, plSTD);
 
-// pobranie czasu do setupt rtc
-// GMT 0 - aby kontrola strefy, albo czasu zinowego letniego odbywala sie po stronie servera
-// uwaga modul pracuje na UTC
+
+/*
+  Funkcja odpowiada za pierwszą konfigurację zegara RTC - odczyt aktualnego czasu.
+  Po połączeniu z siecią WiFi pobiera czas z serwera NTP i zapisuje jego składowe wartości bajtowe.
+   
+  Zegar RTC jest skonfigurowany do przechowywania czasu w standardzie UTC+0.
+  Funkcja timeManager_setUp_DS3231 wywołuje timeManager_getNtpTimeUTC i zapisuje te bajty do modułu RTC.
+*/
 void timeManager_getNtpTimeUTC(dateTime_bytes* NtpBuff){
   String formattedDate;
   String dayStamp;
@@ -73,7 +64,6 @@ void timeManager_getNtpTimeUTC(dateTime_bytes* NtpBuff){
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
     }
-
     if(isDebug){ 
       Serial.println("WiFi connected.");
       Serial.println("IP address: ");
@@ -83,13 +73,13 @@ void timeManager_getNtpTimeUTC(dateTime_bytes* NtpBuff){
 
     //inicjalizacja NTPClient 
     timeClient.begin();
-    // GMT podany w sekundach 0 rtc zwraca czas UTC+0
+    // GMT podany w sekundach -> rtc zwraca czas UTC+0
     timeClient.setTimeOffset(0);
     while(!timeClient.update()) {
       timeClient.forceUpdate();
     }
 
-    formattedDate = timeClient.getFormattedDate(); //string daty w formacie 2004-02-12T15:19:21
+    formattedDate = timeClient.getFormattedDate(); //string daty w formacie np. 2004-02-12T15:19:21
     dOW = timeClient.getDay();
     if(isDebug){ Serial.println(formattedDate); }
 
@@ -131,7 +121,9 @@ void timeManager_getNtpTimeUTC(dateTime_bytes* NtpBuff){
 }
 
 
-// ustawienie na podstawie ntpt
+/*
+  Funkcja zapisująca konfiguracyjny czas NTP do modołu RTC.
+*/
 void timeManager_setUp_DS3231(){
     Wire.begin();
     struct dateTime_bytes setUpBuff;
@@ -139,6 +131,7 @@ void timeManager_setUp_DS3231(){
     // funkcja obsługująca pobranie czasu przy pomocy Ntp 
     timeManager_getNtpTimeUTC(&setUpBuff);   
 
+    // biblioteka i funkcje myRTC obsługują rejestry DS3231 w formacie BCD  
     myRTC.setClockMode(false); //24h
     myRTC.setYear(setUpBuff.year);
     myRTC.setMonth(setUpBuff.month);
@@ -166,13 +159,16 @@ void timeManager_setUp_DS3231(){
     }
 }
 
-
-// odczyt czasu do struktury bajtowej
-//RTC_CyclicalMeasuremens pomiar;
-//getRTC_Time(&pomiar.created_at_bytes);
+ 
+/*
+  Funkcja odczytująca dane z modułu RTC i zapisuje je do bufora przechowującego składowej bajty.
+  Pobiera rok, miesiąc, dzień, godzinę, minutę, sekundę, dzień tygodnia.
+  Zapis w standardzie UTC+0.
+*/
 void timeManager_read_DS3231(dateTime_bytes *timeBuff){
     Wire.begin();
     
+    // biblioteka i funkcje myRTC obsługuje rejestry DS3231 w formacie BCD  
     timeBuff->year = myRTC.getYear();
     timeBuff->month = myRTC.getMonth(century);
     timeBuff->day = myRTC.getDate();
@@ -200,8 +196,11 @@ void timeManager_read_DS3231(dateTime_bytes *timeBuff){
    }
 }
 
-// Konwersja struktury bajtowej czasu UTC+0 na String ISO (np. "2024-03-05T12:00:00+01:00")
-// obsluga zmiany czasu 
+
+/*
+  Funkcja konwertuje czas zapisany w strukturze bajtowej (UTC+0) do zwracanego formatu tekstowego ISO.
+  Najpierw buduje czas UTC+0, potem przelicza go na czas lokalny Polski z uwzględnieniem zmiany czasu letni/zimowy.
+*/
 String timeManager_bytesToISO(const dateTime_bytes &bytesBuff){
     int read_fullYear = (int)bytesBuff.year + 2000;
     int read_month = (int)bytesBuff.month;
@@ -241,7 +240,9 @@ String timeManager_bytesToISO(const dateTime_bytes &bytesBuff){
     return String(buff_iso);
 }
 
-
+/* 
+  Funkcja przygotowania modułu do odcięcia zasilania. Zabezpieczenie przed ewenutalnym poborem pradu przez podłaczone piny.
+*/ 
 void rtcPinsSleep(){
   pinMode(SDA_PIN, INPUT);
   pinMode(SCL_PIN, INPUT);

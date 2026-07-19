@@ -17,6 +17,7 @@ static uint8_t lastResetReason = 0;
 
 /*
   Funkcja wybudająca esp32 ze stanu deep sleep.
+  Wyłączająca nie uzywane modułu radiowe ESP32
 */
 void deepSleepWakeUp(){
   lastResetReason = (uint8_t)esp_reset_reason();
@@ -26,6 +27,9 @@ void deepSleepWakeUp(){
     btStop();
 }
 
+/*
+  Funkcja zapisująca kod źródła wybudzenia ESP32
+*/ 
 uint8_t deepSleepGetResetReason(){
   return lastResetReason;
 }

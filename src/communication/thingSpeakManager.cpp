@@ -1,8 +1,11 @@
 /*
     Obłsuga wysyłki danych do serveru ThingSpeak metodą bulk-write JSON:
-    - odczuty danych zapisanych w rejestrze pamięcie RTC 
+    - odczyty danych zapisanych w rejestrze pamięcie RTC 
     - budowy ciała wiadomości JSON z wykozystaniem biblioteki ArduinoJson
     - wysyłki danych do kanału thingSpeak
+
+    Wymagania ThingSpeak :
+    https://www.mathworks.com/help/thingspeak/bulkwritejsondata.html
 */
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -17,7 +20,7 @@
 #include "communication/timeManager.h"
 
 /*
-    ThingSpeak Channel setUp :
+    ThingSpeak Channel :
     Field 1 - distance_compensated 
     Field 2 - distance_raw
     Field 3 - temperature
@@ -29,8 +32,13 @@
     status  - debug
 */
 
-
-// funkcja buduje json body ostatni pomiar z dnia == pomiar gps i wysylka statusu
+/* 
+    Funkcja budująca Body JSON dla wysyłanych dziennych danych.
+    Surowe dane znacznika czasu zostają transformowane :
+        - z bajtów danych w formacie UTC+0
+        - do czasu poprawnego w formacie zimowym/letnim w lokalnej strefie czasowej i formacie ISO
+    Raz w tygodniu zostają dodatkowo wysyłane dane GPS.
+*/
 String buildJson(const RTC_CyclicalMeasuremens* cyclicalBufor, uint16_t buforSize, const RTC_SingleMeasurements* singleBufor, 
     const RTC_TestStatus* statusBufor, uint16_t dayCounter , const RTC_problemWakeUpCodes* RTC_wakeUpCodes, 
     uint32_t dailySendFailsCount){
@@ -87,7 +95,7 @@ String buildJson(const RTC_CyclicalMeasuremens* cyclicalBufor, uint16_t buforSiz
     return jsonBody;
 }
 
-/* Funkcja wysylki z wykorzystaniem funkcji modemManager:modem_PostHttpsThingSpeak */
+/* Funkcja wysylki Body JSON z wykorzystaniem funkcji modemManager:modem_PostHttpsThingSpeak */
 bool sendToThingSpeak(String JSON){
     return modem_PostHttpsThingSpeak(JSON, THINGSPEAK_CHANNEL_ID);
  }

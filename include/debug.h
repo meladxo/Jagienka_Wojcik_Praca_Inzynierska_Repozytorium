@@ -3,6 +3,6 @@
 
     #include <Arduino.h>
     
-    constexpr bool isDebug = false;             // zarządzanie komunikacją SerialPort i Print logów
+    constexpr bool isDebug = false;   // zarządzanie komunikacją SerialPort i Print logów
  
 #endif
